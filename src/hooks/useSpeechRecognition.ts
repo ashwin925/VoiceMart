@@ -19,6 +19,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isStartingRef = useRef(false);
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const shouldStopRef = useRef(false);
 
   const {
     continuous = true,
@@ -63,8 +64,14 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
       }
 
       const fullTranscript = finalTranscript || interimTranscript;
+      console.log('Speech recognition result:', {
+        fullTranscript,
+        isFinal: !!finalTranscript,
+        confidence: event.results[event.resultIndex]?.[0]?.confidence
+      });
+
       dispatch({ type: 'SET_TRANSCRIPT', payload: fullTranscript });
-      
+
       if (onResult) {
         onResult(fullTranscript, !!finalTranscript);
       }
@@ -107,13 +114,14 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
 
     // Handle end
     recognition.onend = () => {
-      console.log('Speech recognition ended');
-      
-      // Auto-restart if we should still be listening
-      if (isListening && continuous && !isStartingRef.current) {
+      console.log('Speech recognition ended, shouldStop:', shouldStopRef.current);
+
+      // Auto-restart if we should still be listening and not explicitly stopped
+      if (isListening && continuous && !isStartingRef.current && !shouldStopRef.current) {
+        console.log('Auto-restarting speech recognition');
         restartRecognition();
       }
-      
+
       onEnd?.();
     };
 
@@ -152,9 +160,11 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
 
     if (recognitionRef.current && !isStartingRef.current) {
       try {
+        shouldStopRef.current = false; // Reset stop flag
         isStartingRef.current = true;
         recognitionRef.current.start();
         dispatch({ type: 'SET_LISTENING', payload: true });
+        console.log('Started speech recognition, shouldStop reset to false');
       } catch (error) {
         console.error('Error starting recognition:', error);
         isStartingRef.current = false;
@@ -165,15 +175,18 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
 
   // Stop recognition
   const stopRecognition = useCallback(() => {
+    console.log('Stopping speech recognition explicitly');
+    shouldStopRef.current = true; // Set stop flag
+
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
-    
+
     if (restartTimeoutRef.current) {
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
     }
-    
+
     isStartingRef.current = false;
     dispatch({ type: 'SET_LISTENING', payload: false });
     dispatch({ type: 'SET_TRANSCRIPT', payload: '' });

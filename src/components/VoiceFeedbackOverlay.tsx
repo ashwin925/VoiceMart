@@ -45,9 +45,8 @@ const VoiceFeedbackOverlay: React.FC = () => {
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className={`w-2 h-2 rounded-full ${
-                  isCommandMode ? 'bg-green-400' : 'bg-orange-400'
-                } animate-pulse`}
+                className={`w-2 h-2 rounded-full ${isCommandMode ? 'bg-green-400' : 'bg-orange-400'
+                  } animate-pulse`}
                 style={{
                   animationDelay: `${i * 0.2}s`,
                   animationDuration: '1s'
@@ -60,11 +59,11 @@ const VoiceFeedbackOverlay: React.FC = () => {
         {/* Quick Commands Hint */}
         {isCommandMode && (
           <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="text-xs text-gray-500 mb-1">Try saying:</div>
+            <div className="text-xs text-gray-500 mb-1">Available commands:</div>
             <div className="text-xs text-gray-600 space-y-0.5">
               <div>"scroll down" or "scroll up"</div>
-              <div>"go to electronics"</div>
-              <div>"stop listening"</div>
+              <div>"help" for more commands</div>
+              <div>"stop listening" to deactivate</div>
             </div>
           </div>
         )}

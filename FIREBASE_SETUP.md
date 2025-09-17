@@ -42,12 +42,12 @@ Replace the placeholder values in `src/lib/firebase.ts` with your actual config:
 
 ```typescript
 const firebaseConfig = {
-  apiKey: "your-actual-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-actual-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "your-actual-sender-id",
-  appId: "your-actual-app-id"
+  apiKey: "AIzaSyCKvN8c3g3bvvfQqS5F7VuIb_LT2Piz37o",
+  authDomain: "gen-lang-client-0185007753.firebaseapp.com",
+  projectId: "gen-lang-client-0185007753",
+  storageBucket: "gen-lang-client-0185007753.firebasestorage.app",
+  messagingSenderId: "148466751338",
+  appId: "1:148466751338:web:050d548c9eab57e8923713"
 };
 ```
 
@@ -92,12 +92,12 @@ For better security, you can use environment variables:
 
 Create `.env.local`:
 ```
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_API_KEY="AIzaSyCKvN8c3g3bvvfQqS5F7VuIb_LT2Piz37o"
+VITE_FIREBASE_AUTH_DOMAIN="gen-lang-client-0185007753.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID="gen-lang-client-0185007753"
+VITE_FIREBASE_STORAGE_BUCKET="gen-lang-client-0185007753.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID="148466751338"
+VITE_FIREBASE_APP_ID="1:148466751338:web:050d548c9eab57e8923713"
 ```
 
 Then update `firebase.ts` to use these variables:

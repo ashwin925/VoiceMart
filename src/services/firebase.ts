@@ -5,6 +5,7 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  setDoc,
   deleteDoc,
   query,
   where,
@@ -37,11 +38,11 @@ export const authService = {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
-    
+
     // Check if user is admin (you can customize this logic)
-    const adminEmails = ['admin@voicecart.com', 'your-admin-email@gmail.com'];
+    const adminEmails = ['admin@voicecart.com', 'ashwinsundar90250@gmail.com'];
     const isAdmin = adminEmails.includes(user.email || '');
-    
+
     const userData: User = {
       uid: user.uid,
       email: user.email || '',
@@ -50,10 +51,10 @@ export const authService = {
       isAdmin,
       createdAt: Timestamp.now()
     };
-    
-    // Save user data to Firestore
-    await updateDoc(doc(db, 'users', user.uid), userData as any);
-    
+
+    // Save user data to Firestore (use setDoc to create or update)
+    await setDoc(doc(db, 'users', user.uid), userData as any, { merge: true });
+
     return userData;
   },
 
@@ -69,7 +70,7 @@ export const authService = {
           callback(userDoc.data() as User);
         } else {
           // Create new user document
-          const adminEmails = ['admin@voicecart.com', 'your-admin-email@gmail.com'];
+          const adminEmails = ['admin@voicecart.com', 'ashwinsundar90250@gmail.com'];
           const userData: User = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || '',
@@ -78,7 +79,7 @@ export const authService = {
             isAdmin: adminEmails.includes(firebaseUser.email || ''),
             createdAt: Timestamp.now()
           };
-          await updateDoc(doc(db, 'users', firebaseUser.uid), userData as any);
+          await setDoc(doc(db, 'users', firebaseUser.uid), userData as any, { merge: true });
           callback(userData);
         }
       } else {

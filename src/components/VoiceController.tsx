@@ -4,7 +4,7 @@ import { useAppContext } from '../context/AppContext';
 
 const VoiceController: React.FC = () => {
   const { state } = useAppContext();
-  const { hasMicPermission } = state;
+  const { hasMicPermission, isCommandMode } = state;
   const voiceCommands = useVoiceCommands();
 
   // Auto-start voice recognition when permission is granted
@@ -13,6 +13,7 @@ const VoiceController: React.FC = () => {
       // Small delay to ensure everything is initialized
       const timer = setTimeout(() => {
         if (!voiceCommands.isListening) {
+          console.log('VoiceController: Starting voice recognition');
           voiceCommands.startRecognition();
         }
       }, 1000);
@@ -20,6 +21,11 @@ const VoiceController: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [hasMicPermission, voiceCommands]);
+
+  // Log command mode changes for debugging
+  useEffect(() => {
+    console.log('VoiceController: Command mode changed to:', isCommandMode);
+  }, [isCommandMode]);
 
   // Show warning if speech recognition is not supported
   useEffect(() => {

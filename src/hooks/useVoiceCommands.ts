@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { useSpeechRecognition } from './useSpeechRecognition';
@@ -7,115 +7,86 @@ export const useVoiceCommands = () => {
   const { state, dispatch } = useAppContext();
   const { isCommandMode } = state;
   const navigate = useNavigate();
+  const commandModeRef = useRef(isCommandMode);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    commandModeRef.current = isCommandMode;
+    console.log('Command mode ref updated to:', isCommandMode);
+  }, [isCommandMode]);
 
   // Process voice commands
   const processCommand = useCallback((transcript: string, isFinal: boolean) => {
     if (!isFinal) return;
 
     const command = transcript.toLowerCase().trim();
-    console.log('Processing voice command:', command);
+
+    // Get current state directly from context to avoid stale closure
+    const currentState = state;
+    console.log('Processing voice command:', command, 'Command mode:', currentState.isCommandMode);
 
     // Activation commands (work even when command mode is off)
     if (command.includes('listen now') || command.includes('start listening')) {
+      console.log('Activating command mode, current state:', currentState.isCommandMode, 'ref:', commandModeRef.current);
       dispatch({ type: 'SET_COMMAND_MODE', payload: true });
+      commandModeRef.current = true; // Update ref immediately
+      console.log('Command mode activated, ref now:', commandModeRef.current);
       speak('Voice commands activated. I\'m listening for your commands.');
       return;
     }
 
     // Commands that only work when command mode is active
-    if (!isCommandMode) {
+    // Use ref for more immediate state check
+    if (!commandModeRef.current && !currentState.isCommandMode) {
+      console.log('Command mode not active, ignoring command:', command, 'ref:', commandModeRef.current, 'state:', currentState.isCommandMode);
       return;
     }
 
     // Deactivation commands
     if (command.includes('stop listening') || command.includes('stop commands')) {
+      console.log('Deactivating command mode and stopping recognition');
       dispatch({ type: 'SET_COMMAND_MODE', payload: false });
+      commandModeRef.current = false; // Update ref immediately
       speak('Voice commands deactivated.');
+      // Also stop the speech recognition
+      setTimeout(() => {
+        speechRecognition.stopRecognition();
+      }, 1000); // Give time for the speech to finish
       return;
     }
 
-    // Navigation commands
-    if (command.includes('scroll down') || command.includes('scroll down page')) {
+    // Basic scroll commands
+    if (command.includes('scroll down')) {
+      console.log('Executing scroll down - current scroll position:', window.scrollY);
       window.scrollBy({ top: 300, behavior: 'smooth' });
       speak('Scrolling down');
+      setTimeout(() => {
+        console.log('After scroll down - new scroll position:', window.scrollY);
+      }, 500);
       return;
     }
 
-    if (command.includes('scroll up') || command.includes('scroll up page')) {
+    if (command.includes('scroll up')) {
+      console.log('Executing scroll up - current scroll position:', window.scrollY);
       window.scrollBy({ top: -300, behavior: 'smooth' });
       speak('Scrolling up');
-      return;
-    }
-
-    if (command.includes('go to top') || command.includes('scroll to top')) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      speak('Going to top of page');
-      return;
-    }
-
-    if (command.includes('go to bottom') || command.includes('scroll to bottom')) {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      speak('Going to bottom of page');
-      return;
-    }
-
-    // Category navigation
-    if (command.includes('go to electronics') || command.includes('show electronics')) {
-      scrollToSection('electronics');
-      speak('Going to electronics section');
-      return;
-    }
-
-    if (command.includes('go to fashion') || command.includes('show fashion')) {
-      scrollToSection('fashion');
-      speak('Going to fashion section');
-      return;
-    }
-
-    if (command.includes('go to home') || command.includes('show home')) {
-      scrollToSection('home');
-      speak('Going to home section');
-      return;
-    }
-
-    if (command.includes('go to sports') || command.includes('show sports')) {
-      scrollToSection('sports');
-      speak('Going to sports section');
-      return;
-    }
-
-    // Page navigation
-    if (command.includes('go home') || command.includes('go to home page')) {
-      navigate('/');
-      speak('Going to home page');
-      return;
-    }
-
-    if (command.includes('admin dashboard') || command.includes('go to admin')) {
-      navigate('/admin');
-      speak('Going to admin dashboard');
-      return;
-    }
-
-    // Search commands
-    if (command.includes('search for')) {
-      const searchTerm = command.replace(/.*search for\s+/, '');
-      if (searchTerm) {
-        performSearch(searchTerm);
-        speak(`Searching for ${searchTerm}`);
-      }
+      setTimeout(() => {
+        console.log('After scroll up - new scroll position:', window.scrollY);
+      }, 500);
       return;
     }
 
     // Help command
     if (command.includes('help') || command.includes('what can i say')) {
-      speak('You can say: scroll up, scroll down, go to electronics, search for products, stop listening, or ask for help.');
+      console.log('Providing help');
+      speak('You can say: scroll up, scroll down, stop listening, or help.');
       return;
     }
 
-    // Unknown command
-    speak('I didn\'t understand that command. Say "help" to hear available commands.');
-  }, [isCommandMode, dispatch, navigate]);
+    // Unknown command - be more specific about available commands
+    console.log('Unknown command received:', command);
+    speak('I didn\'t understand that command. You can say: scroll up, scroll down, stop listening, or help.');
+  }, [state, dispatch, navigate]);
 
   // Text-to-speech function
   const speak = useCallback((text: string) => {

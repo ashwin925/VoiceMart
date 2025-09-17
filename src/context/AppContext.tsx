@@ -20,40 +20,39 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
   switch (action.type) {
     case 'SET_MIC_PERMISSION':
       return { ...state, hasMicPermission: action.payload };
-    
+
     case 'SET_LISTENING':
-      return { 
-        ...state, 
+      return {
+        ...state,
         isListening: action.payload,
-        // Reset command mode when stopping listening
-        isCommandMode: action.payload ? state.isCommandMode : false,
+        // Only clear transcript when stopping listening, keep command mode
         transcript: action.payload ? state.transcript : ''
       };
-    
+
     case 'SET_COMMAND_MODE':
       return { ...state, isCommandMode: action.payload };
-    
+
     case 'SET_TRANSCRIPT':
       return { ...state, transcript: action.payload };
-    
+
     case 'SET_PRODUCTS':
       return { ...state, products: action.payload };
-    
+
     case 'SET_CATEGORIES':
       return { ...state, categories: action.payload };
-    
+
     case 'SET_USER':
       return { ...state, user: action.payload };
-    
+
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
-    
+
     case 'SET_ERROR':
       return { ...state, error: action.payload };
-    
+
     case 'CLEAR_ERROR':
       return { ...state, error: null };
-    
+
     default:
       return state;
   }
