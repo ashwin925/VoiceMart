@@ -62,8 +62,9 @@ const VoiceFeedbackOverlay: React.FC = () => {
             <div className="text-xs text-gray-500 mb-1">Available commands:</div>
             <div className="text-xs text-gray-600 space-y-0.5">
               <div>"scroll down" or "scroll up"</div>
-              <div>"help" for more commands</div>
-              <div>"stop listening" to deactivate</div>
+              <div>"select [category]" or "select [product]"</div>
+              <div>"enter" to open, "exit" to close</div>
+              <div>"help" or "stop listening"</div>
             </div>
           </div>
         )}

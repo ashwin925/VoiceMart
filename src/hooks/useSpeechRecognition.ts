@@ -21,6 +21,8 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
   const restartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const shouldStopRef = useRef(false);
   const keepAliveRef = useRef<NodeJS.Timeout | null>(null);
+  const restartCountRef = useRef(0);
+  const lastRestartTimeRef = useRef(0);
 
   const {
     continuous = true,
@@ -131,50 +133,60 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     return recognition;
   }, [continuous, interimResults, lang, onResult, onError, onStart, onEnd, dispatch, isListening]);
 
-  // Restart recognition with a small delay
+  // Restart recognition with a small delay and rate limiting
   const restartRecognition = useCallback(() => {
+    const now = Date.now();
+
+    // Rate limiting: don't restart more than once per 2 seconds
+    if (now - lastRestartTimeRef.current < 2000) {
+      console.log('Rate limiting restart attempts');
+      return;
+    }
+
+    // Reset restart count every 30 seconds
+    if (now - lastRestartTimeRef.current > 30000) {
+      restartCountRef.current = 0;
+    }
+
+    // Don't restart more than 5 times in 30 seconds
+    if (restartCountRef.current >= 5) {
+      console.log('Too many restart attempts, backing off');
+      return;
+    }
+
     if (restartTimeoutRef.current) {
       clearTimeout(restartTimeoutRef.current);
     }
 
     restartTimeoutRef.current = setTimeout(() => {
-      if (isListening && recognitionRef.current && !isStartingRef.current && !shouldStopRef.current) {
+      if (isListening && !isStartingRef.current && !shouldStopRef.current) {
         try {
-          console.log('Attempting to restart speech recognition...');
-          isStartingRef.current = true;
-          recognitionRef.current.start();
-          console.log('Speech recognition restarted successfully');
+          console.log('Attempting to restart speech recognition... (attempt', restartCountRef.current + 1, ')');
+
+          // Always reinitialize to ensure clean state
+          recognitionRef.current = initializeRecognition();
+
+          if (recognitionRef.current) {
+            isStartingRef.current = true;
+            restartCountRef.current++;
+            lastRestartTimeRef.current = now;
+
+            recognitionRef.current.start();
+            console.log('Speech recognition restarted successfully');
+          }
         } catch (error) {
           console.error('Error restarting recognition:', error);
           isStartingRef.current = false;
 
-          // If we get an error, try to reinitialize and restart
-          if (error.message?.includes('already started')) {
-            console.log('Recognition already started, continuing...');
+          if (error instanceof Error && error.message?.includes('already started')) {
+            console.log('Recognition already started, resetting flags');
             isStartingRef.current = false;
-          } else {
-            // Try to reinitialize after a longer delay
-            setTimeout(() => {
-              if (isListening && !shouldStopRef.current) {
-                console.log('Reinitializing speech recognition after error...');
-                recognitionRef.current = initializeRecognition();
-                if (recognitionRef.current) {
-                  try {
-                    isStartingRef.current = true;
-                    recognitionRef.current.start();
-                  } catch (retryError) {
-                    console.error('Failed to restart after reinitializing:', retryError);
-                    isStartingRef.current = false;
-                  }
-                }
-              }
-            }, 1000);
           }
         }
       } else {
-        console.log('Not restarting - isListening:', isListening, 'hasRecognition:', !!recognitionRef.current, 'isStarting:', isStartingRef.current, 'shouldStop:', shouldStopRef.current);
+        console.log('Not restarting - isListening:', isListening, 'isStarting:', isStartingRef.current, 'shouldStop:', shouldStopRef.current);
       }
-    }, 500); // Increased delay to 500ms for more reliable restart
+    }, 1000); // Increased delay for more reliable restart
   }, [isListening, initializeRecognition]);
 
   // Keep-alive mechanism to ensure continuous listening
@@ -187,7 +199,7 @@ export const useSpeechRecognition = (options: UseSpeechRecognitionOptions = {}) 
     keepAliveRef.current = setInterval(() => {
       if (isListening && !shouldStopRef.current && !isStartingRef.current) {
         // If recognition should be running but isn't, restart it
-        if (!recognitionRef.current || recognitionRef.current.readyState === 'inactive') {
+        if (!recognitionRef.current) {
           console.log('Keep-alive: Recognition inactive, restarting...');
           restartRecognition();
         }

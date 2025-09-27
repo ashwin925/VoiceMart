@@ -1,6 +1,6 @@
 import React from 'react';
 import Container from '../components/Container';
-import CategoryGrid from '../components/CategoryGrid';
+import NewCategoryGrid from '../components/NewCategoryGrid';
 import { Mic, ShoppingBag, Accessibility, Zap } from 'lucide-react';
 
 const HomePage: React.FC = () => {
@@ -106,7 +106,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Categories Grid with Animation */}
-      <CategoryGrid />
+      <NewCategoryGrid />
 
       {/* How It Works */}
       <section>

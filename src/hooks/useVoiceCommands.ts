@@ -36,9 +36,9 @@ export const useVoiceCommands = () => {
     }
 
     // Commands that only work when command mode is active
-    // Use ref for more immediate state check
-    if (!commandModeRef.current && !currentState.isCommandMode) {
-      console.log('Command mode not active, ignoring command:', command, 'ref:', commandModeRef.current, 'state:', currentState.isCommandMode);
+    // Use ref for immediate state check
+    if (!commandModeRef.current) {
+      console.log('Command mode not active, ignoring command:', command, 'ref:', commandModeRef.current);
       return;
     }
 
@@ -76,10 +76,66 @@ export const useVoiceCommands = () => {
       return;
     }
 
+    // Category selection commands
+    if (command.includes('select ')) {
+      const selectMatch = command.match(/select (.+)/);
+      if (selectMatch) {
+        const selection = selectMatch[1].trim();
+        console.log('Voice command - Selecting:', selection);
+
+        let found = false;
+
+        // Try to select category first
+        if ((window as any).selectCategory) {
+          found = (window as any).selectCategory(selection);
+          if (found) {
+            speak(`Selected category ${selection}`);
+            return;
+          }
+        }
+
+        // If no category found, try product
+        if ((window as any).selectProduct) {
+          found = (window as any).selectProduct(selection);
+          if (found) {
+            speak(`Selected product ${selection}`);
+            return;
+          }
+        }
+
+        if (!found) {
+          speak(`Could not find ${selection}. Please try again.`);
+        }
+      }
+      return;
+    }
+
+    // Enter command to activate selected item
+    if (command.includes('enter') || command.includes('click')) {
+      console.log('Executing enter command');
+      if ((window as any).handleCategoryEnter) {
+        (window as any).handleCategoryEnter();
+        speak('Opening selected item');
+      } else {
+        speak('No item selected');
+      }
+      return;
+    }
+
+    // Exit command to close modal or deselect
+    if (command.includes('exit') || command.includes('close') || command.includes('back')) {
+      console.log('Executing exit command');
+      if ((window as any).handleCategoryExit) {
+        (window as any).handleCategoryExit();
+        speak('Closing');
+      }
+      return;
+    }
+
     // Help command
     if (command.includes('help') || command.includes('what can i say')) {
       console.log('Providing help');
-      speak('You can say: scroll up, scroll down, stop listening, or help.');
+      speak('You can say: scroll up, scroll down, select category name, select product name, enter, exit, stop listening, or help.');
       return;
     }
 

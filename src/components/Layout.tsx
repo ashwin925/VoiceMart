@@ -37,7 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <Navbar />
 
       {/* Main Content */}
-      <main id="main-content" className="flex-1 pt-16" tabIndex={-1}>
+      <main id="main-content" className="flex-1 pt-20" tabIndex={-1}>
         {children}
       </main>
 

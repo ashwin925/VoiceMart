@@ -82,6 +82,36 @@
     @apply absolute inset-0 rounded-full bg-red-500 opacity-20 animate-ping;
   }
 
+  /* Infinite scrolling animations */
+  @keyframes scroll-left {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll-left {
+    animation: scroll-left 30s linear infinite;
+  }
+
+  .pause-animation {
+    animation-play-state: paused;
+  }
+
+  .hover\:pause-animation:hover {
+    animation-play-state: paused;
+  }
+
+  /* Line clamp utility */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .category-card {
     @apply bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1;
   }
